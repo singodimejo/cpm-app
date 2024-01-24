@@ -90,4 +90,4 @@ function criticalityCalculator(oldSteps: WorkStep[]) {
 	return newSteps;
 }
 
-export { WorkStep, calculateCPM };
+export { WorkStep, calculateCPM, isADependency };

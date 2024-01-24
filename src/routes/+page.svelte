@@ -1,12 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-    import { WorkStep } from '$lib/project';
+    import { WorkStep, isADependency } from '$lib/project';
 	import createWorkStepStore from '$lib/work-step-store';
+	import Diagram from '$lib/components/Diagram.svelte';
 
     const workStepStore = createWorkStepStore([])
     let newStep = new WorkStep()
     let workSteps: WorkStep[] = []
+    let diagram: string = `
+    flowchart TD
+    A["Start Adding Steps Down Below!"]`
+
 
     onMount(() => {
         workStepStore.subscribe(arr => workSteps = arr)
@@ -17,18 +22,56 @@
     function addDependency(e: Event & { currentTarget: EventTarget & HTMLInputElement }, id:number) {
         if (e.currentTarget.checked) {
             newStep.dependencies = newStep.dependencies.toSpliced(newStep.dependencies.length, 0, id).toSorted()
-            newStep = newStep
         } else {
             newStep.dependencies = newStep.dependencies.filter(val => val !== id).toSorted()
-            newStep = newStep
         }
         newStep = newStep
+    }
+
+    //render diagram
+    function diagramTextWriter(workStepArr: WorkStep[]): string {
+        let text = 'flowchart LR\n'
+        let linkTracker: number = 0
+        workStepArr.forEach((step, stepid, stepsArr) => {
+            text = text.concat(`${stepid}["
+${step.earliestStart} | ${step.expectedTime} | ${step.earliestFinish}
+${step.name}
+${step.latestStart} | ${step.slack} | ${step.latestFinish}
+"]${step.isCritical ? `\n style ${stepid} stroke:#F00\n` : ''}\n`)
+
+            if (step.dependencies.length !== 0) {
+                step.dependencies.forEach(dep => {
+                    text = text.concat(`${dep} --> ${stepid}\n`)
+                    if (stepsArr[dep].isCritical && step.isCritical) text = text.concat(`linkStyle ${linkTracker} stroke:#F00\n`)
+                    linkTracker++
+                })
+            }
+
+            if (!isADependency(step, stepsArr)) {
+                text = text.concat(`${stepid} --> Final\n
+${step.isCritical ? `linkStyle ${linkTracker} stroke:#F00` : ''}\n`)
+                linkTracker++
+            }
+        })
+
+        text = text.concat(`
+\n ID["ES | T | EF
+Activity Name
+LS | S | LF"]
+
+Final["
+Final Project Time: ${workStepArr.findLast((_, id, arr) => id === arr.length - 1)!.latestFinish}
+"]
+`) 
+        console.log(workStepArr)
+        return text.toString()
     }
 </script>
 
 <h1 class="text-center text-4xl font-bold my-4">Critical Path Analyzer</h1>
 
 <!-- Diagram -->
+<Diagram {diagram}/>
 
 <!-- table -->
 <div class="w-full py-2 px-4">
@@ -105,6 +148,8 @@
     </fieldset>
     <button type="button" class="border border-slate-500 hover:bg-slate-500/15 transition-colors duration-150 rounded-sm p-3" on:click={() => {
         workStepStore.addNewStep(newStep)
+        diagram = diagramTextWriter(workSteps)
+        diagram = diagram
         newStep = new WorkStep()
     }}>Add New Activity.</button>
 </div>
