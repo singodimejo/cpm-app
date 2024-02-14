@@ -5,6 +5,7 @@
 	import createWorkStepStore from '$lib/work-step-store';
 	import Diagram from '$lib/components/Diagram.svelte';
     import { Button } from '$lib/components/ui/button';
+    import DependenciesInput from './dependenciesInput.svelte';
 
     const workStepStore = createWorkStepStore([])
     let newStep = new WorkStep()
@@ -64,7 +65,6 @@ Final["
 Final Project Time: ${workStepArr.findLast((_, id, arr) => id === arr.length - 1)!.latestFinish}
 "]
 `) 
-        console.log(workStepArr)
         return text.toString()
     }
 </script>
@@ -94,9 +94,38 @@ Final Project Time: ${workStepArr.findLast((_, id, arr) => id === arr.length - 1
             {#each workSteps as ws}
                 <tr>
                     <td class=" text-center border border-slate-500">{workSteps.findIndex(el => el.name === ws.name) + 1}.</td>
-                    <td class=" text-center border border-slate-500">{ws.name}</td>
-                    <td class=" text-center border border-slate-500">{ws.expectedTime}</td>
-                    <td class=" text-center border border-slate-500">{ws.dependencies.map(val => workSteps.findIndex(el => el.name === workSteps[val].name) + 1)}</td>
+                    <td class=" text-center border border-slate-500">
+                        <input type="text" class="text-center"
+                            bind:value={ws.name}
+                            on:input={() => {
+                                diagram = diagramTextWriter(workSteps)
+                                diagram = diagram
+                            }}
+                        >
+                    </td>
+                    <td class=" text-center border border-slate-500">
+                        <input type="number" class="text-center" 
+                            bind:value={ws.expectedTime} 
+                            on:input={() => {
+                                workStepStore.recalculateCPM()
+                                diagram = diagramTextWriter(workSteps)
+                                diagram = diagram
+                            }}
+                        >
+                    </td>
+                    <td class=" text-center border border-slate-500">
+                        <DependenciesInput 
+                            {workSteps} 
+                            id={workSteps.findIndex((val) => val.name === ws.name)} 
+                            bind:dependencies={ws.dependencies}
+                            on:change={() => {
+                                workStepStore.recalculateCPM()
+                                diagram = diagramTextWriter(workSteps)
+                                diagram = diagram
+                            }}
+                        />
+                        <!-- {ws.dependencies.map(val => workSteps.findIndex(el => el.name === workSteps[val].name) + 1)} -->
+                    </td>
                     <td class=" text-center border border-slate-500">{ws.earliestStart}</td>
                     <td class=" text-center border border-slate-500">{ws.earliestFinish}</td>
                     <td class=" text-center border border-slate-500">{ws.latestStart}</td>

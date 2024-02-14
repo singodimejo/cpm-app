@@ -10,8 +10,15 @@ export default function createWorkStepStore(initialSteps: WorkStep[]) {
 		);
 	}
 
+	function recalculateCPM() {
+		workStepList.update((workStepList) =>
+			calculateCPM(workStepList)
+		);
+	}
+
 	return {
 		...workStepList,
-		addNewStep
+		addNewStep,
+		recalculateCPM
 	};
 }
