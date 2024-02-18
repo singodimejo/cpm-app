@@ -6,6 +6,7 @@ class WorkStep {
 	name: string = '';
 	expectedTime: number = 0;
 	dependencies: number[] = [];
+	cost: number = 0;
 	earliestStart: number = 0;
 	earliestFinish: number = 0;
 	latestStart: number = 0;
@@ -25,6 +26,15 @@ function hasDependencies(workStep: WorkStep) {
 
 function calculateCPM(oldSteps: WorkStep[]) {
 	let newSteps = oldSteps;
+	newSteps = newSteps.map<WorkStep>((step) => {
+		return {
+			...step,
+			earliestFinish: 0,
+			earliestStart: 0,
+			latestFinish: 0,
+			latestStart: 0
+		};
+	});
 
 	newSteps = forwardFeed(newSteps);
 	newSteps = backwardFeed(newSteps);
@@ -37,10 +47,6 @@ function forwardFeed(oldSteps: WorkStep[]) {
 	let newSteps = oldSteps;
 
 	newSteps.forEach((step, _, steps) => {
-		if (step.name === 'g') {
-			console.log(step);
-			console.log(hasDependencies(step));
-		}
 		if (hasDependencies(step)) {
 			step.earliestStart = steps
 				.filter((_, id) => step.dependencies.includes(id))
@@ -90,4 +96,10 @@ function criticalityCalculator(oldSteps: WorkStep[]) {
 	return newSteps;
 }
 
-export { WorkStep, calculateCPM, isADependency };
+function numberToRupiahConverter(number: number) {
+	return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' })
+		.format(number)
+		.replace(',00', ',-');
+}
+
+export { WorkStep, calculateCPM, isADependency, numberToRupiahConverter };

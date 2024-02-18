@@ -15,10 +15,10 @@
 
 {#if id !== 0}
     <DropdownMenu.Root closeOnItemClick={false}>
-        <DropdownMenu.Trigger class="w-full m-0">
-            <Button variant="ghost" size="sm" class="w-full rounded-none hover:bg-slate-300">
+        <DropdownMenu.Trigger asChild let:builder>
+            <Button builders={[builder]} variant="ghost" class="w-full rounded-none hover:bg-slate-300 m-0">
                 {#if dependencies.length > 0}
-                {dependencies.map(val => workSteps[val].name)}
+                {dependencies.map(val => ` ${workSteps[val].name.substring(0,17)}${workSteps[val].name.length < 20 ? '' : '...'}`)}
                 {:else}
                 ---    
                 {/if}
